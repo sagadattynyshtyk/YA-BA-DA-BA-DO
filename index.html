@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Proposal — Institutional Trust in Kazakhstan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #e8e6df;
+    --ink-dim: #a9a89f;
+    --bg: #0a1119;
+    --bg-panel: #121d2e;
+    --accent: #3d7fa8;      /* muted flag blue */
+    --gold: #c9a24b;        /* muted eagle gold */
+    --todo: #d68a3f;
+    --bg-todo: #241a10;
+    --line: #26344a;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  /* text scales with the screen: ~16px on a laptop, ~24px+ on a big display */
+  html { font-size: clamp(15px, 0.55vw + 0.45vh + 5px, 30px); }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--ink);
+    background: radial-gradient(ellipse at 50% -10%, #14233a 0%, var(--bg) 60%);
+    overflow: hidden;
+  }
+
+  #snow {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* ---- slide mechanics ---- */
+  .deck { height: 100vh; width: 100vw; position: relative; z-index: 5; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 64px 8vw 130px;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  .slide.enter .slide-inner { animation: rise 0.7s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .slide-inner { max-width: min(62em, 100%); margin: auto; width: 100%; }
+
+  .slide h2 {
+    color: var(--gold);
+    font-size: 1.6em;
+    font-weight: normal;
+    letter-spacing: 0.4px;
+    margin: 0 0 28px;
+    position: relative;
+    display: inline-block;
+  }
+  .slide h2::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -8px;
+    height: 2px;
+    width: 100%;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: draw 0.8s 0.15s cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  @keyframes draw { to { transform: scaleX(1); } }
+
+  .kicker {
+    font-family: -apple-system, sans-serif;
+    font-size: 0.78em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  /* ---- title slide ---- */
+  #slide-title { justify-content: center; text-align: left; }
+  #slide-title h1 {
+    color: var(--ink);
+    font-size: 2.4em;
+    line-height: 1.25;
+    margin: 0 0 16px;
+    font-weight: normal;
+  }
+  #slide-title p.meta {
+    font-family: -apple-system, sans-serif;
+    color: var(--ink-dim);
+    font-size: 1em;
+    margin-bottom: 40px;
+  }
+  .dateline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.8em;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .dateline .rule {
+    flex: 0 0 60px; height: 1px; background: var(--gold);
+    animation: extend 1.2s 0.3s cubic-bezier(.2,.7,.3,1) both;
+    transform-origin: left;
+  }
+  @keyframes extend { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .pulse-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold);
+    display: inline-block;
+    margin-right: 8px;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
+  /* ---- Alatau mountain horizon (the range behind Almaty) ---- */
+  #mountains {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    width: 100%; height: 14vh;
+    z-index: 2; pointer-events: none;
+    opacity: 0.7;
+  }
+  /* ---- flag sun watermark ---- */
+  .sun {
+    position: fixed; right: -8vw; top: 50%;
+    width: 46vw; max-width: 560px; aspect-ratio: 1;
+    transform: translateY(-50%);
+    z-index: 2; pointer-events: none;
+    opacity: 0; transition: opacity 1.2s ease;
+  }
+  .sun.show { opacity: 0.13; }
+  .sun svg { width: 100%; height: 100%; animation: spin 240s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* ---- corner ornaments on every slide ---- */
+  .corner {
+    position: fixed; width: 54px; height: 54px;
+    z-index: 3; pointer-events: none; opacity: 0.35;
+  }
+  .corner.tl { top: 18px; left: 18px; }
+  .corner.tr { top: 18px; right: 18px; transform: scaleX(-1); }
+
+  /* ---- Kazakh ornament (qoshqar muiz, ram's horn) ---- */
+  .ornament {
+    height: 22px;
+    width: 100%;
+    margin: 28px 0;
+    opacity: 0;
+    animation: fadeIn 1.4s 0.6s ease forwards;
+  }
+  @keyframes fadeIn { to { opacity: 0.55; } }
+  .native {
+    font-family: -apple-system, sans-serif;
+    font-size: 0.85em;
+    color: var(--ink-dim);
+    letter-spacing: 1px;
+    margin-top: 14px;
+  }
+
+  /* ---- context timeline ---- */
+  .tl { position: relative; margin: 8px 0 24px; padding-left: 26px; }
+  .tl::before {
+    content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px;
+    width: 1px; background: var(--line);
+  }
+  .tl-item {
+    position: relative; margin-bottom: 18px;
+    opacity: 0; transform: translateX(-8px);
+  }
+  .slide.enter .tl-item { animation: slideIn 0.6s ease forwards; }
+  .slide.enter .tl-item:nth-child(1) { animation-delay: 0.3s; }
+  .slide.enter .tl-item:nth-child(2) { animation-delay: 0.55s; }
+  .slide.enter .tl-item:nth-child(3) { animation-delay: 0.8s; }
+  .slide.enter .tl-item:nth-child(4) { animation-delay: 1.05s; }
+  @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+  .tl-item::before {
+    content: ''; position: absolute; left: -24px; top: 7px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--gold);
+  }
+  .tl-date {
+    font-family: -apple-system, sans-serif; font-size: 0.75em;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold);
+  }
+  .tl-text { font-size: 0.98em; }
+  .stats { display: flex; gap: 36px; flex-wrap: wrap; margin: 8px 0 20px; }
+  .stat-num { font-size: 2.1em; color: var(--ink); line-height: 1.1; }
+  .stat-label {
+    font-family: -apple-system, sans-serif; font-size: 0.75em;
+    color: var(--ink-dim); max-width: 160px;
+  }
+  .source-note {
+    font-family: -apple-system, sans-serif; font-size: 0.72em;
+    color: var(--ink-dim); margin-top: 10px;
+  }
+
+  /* ---- region tile map ---- */
+  .map-wrap { margin-top: 26px; }
+  .map-wrap svg { width: 100%; max-width: 32em; height: auto; display: block; }
+  .tile rect { fill: var(--bg-panel); stroke: var(--line); stroke-width: 1; }
+  .tile text {
+    fill: var(--ink-dim); font-family: -apple-system, sans-serif;
+    font-size: 8.5px; text-anchor: middle;
+  }
+  .tile.hit rect { fill: #3a2e14; stroke: var(--gold); }
+  .tile.hit text { fill: var(--gold); }
+  .tile { transform-box: fill-box; transform-origin: center; }
+  .slide.enter .tile { animation: tileIn 0.6s ease both; }
+  @keyframes tileIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.9); }
+    to   { opacity: 1; transform: none; }
+  }
+  /* hard-hit regions keep a slow gold glow once the map has drawn */
+  .slide.enter .tile.hit rect { animation: glow 2.8s 1.6s ease-in-out infinite; }
+  @keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 0 rgba(201,162,75,0)); }
+    50%      { filter: drop-shadow(0 0 7px rgba(201,162,75,0.75)); }
+  }
+  .map-legend {
+    display: flex; gap: 20px; margin-top: 10px;
+    font-family: -apple-system, sans-serif; font-size: 0.75em; color: var(--ink-dim);
+  }
+  .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--line); background: var(--bg-panel); }
+  .swatch.hit { background: #3a2e14; border-color: var(--gold); }
+
+  /* ---- display type ---- */
+  #slide-title h1, .slide h2, .stat-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  #slide-title h1 { font-size: 3em; }
+  .slide h2 { font-size: 2em; }
+  #slide-title h1 .w {
+    display: inline-block; opacity: 0; transform: translateY(10px);
+    animation: wordIn 0.7s ease forwards;
+  }
+  @keyframes wordIn { to { opacity: 1; transform: none; } }
+
+  /* ---- faint shyrdak (felt) pattern over everything ---- */
+  body::after {
+    content: ''; position: fixed; inset: 0; z-index: 3; pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 8 L52 28 L72 40 L52 52 L40 72 L28 52 L8 40 L28 28 Z' fill='none' stroke='%23c9a24b' stroke-width='1.5'/%3E%3Cpath d='M40 28 C46 28 46 36 40 36 C34 36 34 28 40 28 M40 52 C46 52 46 44 40 44 C34 44 34 52 40 52' fill='none' stroke='%23c9a24b' stroke-width='1.2'/%3E%3C/svg%3E");
+    background-size: 80px 80px;
+  }
+
+  /* ---- ornament frame on the research question ---- */
+  .question-box { position: relative; }
+  .question-box::before, .question-box::after {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    border-color: var(--gold); border-style: solid; opacity: 0.8;
+  }
+  .question-box::before { top: -6px; right: -6px; border-width: 1.5px 1.5px 0 0; border-radius: 0 8px 0 0; }
+  .question-box::after  { bottom: -6px; right: -6px; border-width: 0 1.5px 1.5px 0; border-radius: 0 0 8px 0; }
+
+  /* ---- 238 memorial dots ---- */
+  .memorial { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; margin: 6px 0 18px; }
+  .dotfield { display: grid; grid-template-columns: repeat(34, 0.42em); gap: 0.25em; }
+  .dotfield span {
+    width: 0.42em; height: 0.42em; border-radius: 50%;
+    background: var(--gold); opacity: 0;
+  }
+  .slide.enter .dotfield span { animation: candle 0.5s ease forwards; }
+  @keyframes candle { 0% { opacity: 0; } 60% { opacity: 0.95; } 100% { opacity: 0.6; } }
+  .memorial-caption {
+    font-family: -apple-system, sans-serif; font-size: 0.75em;
+    color: var(--ink-dim); margin-top: 8px; font-style: italic;
+  }
+
+  /* ---- Kazakh heading line ---- */
+  .kz {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    font-size: 0.8em; letter-spacing: 1px;
+    color: var(--gold); opacity: 0.75;
+    margin-bottom: 0.15em;
+  }
+
+  /* ---- shanyrak watermark behind each heading ---- */
+  .slide-inner { position: relative; }
+  .shanyrak {
+    position: absolute; left: -4.2em; top: -3em;
+    width: 11em; height: 11em;
+    opacity: 0.12; pointer-events: none; z-index: 0;
+    animation: spin 150s linear infinite;
+  }
+  .slide-inner > *:not(.shanyrak) { position: relative; z-index: 1; }
+
+  /* ---- diamond bullet points ---- */
+  ul.pts { list-style: none; padding-left: 0; margin: 0.35em 0 0; }
+  ul.pts li { position: relative; padding-left: 1.2em; margin-bottom: 0.3em; line-height: 1.45; }
+  ul.pts li::before {
+    content: ''; position: absolute; left: 0.15em; top: 0.62em;
+    width: 0.34em; height: 0.34em; background: var(--gold); transform: rotate(45deg);
+  }
+  ul.pts ul.pts { margin-top: 0.2em; }
+  ul.pts ul.pts li::before { background: none; border: 1px solid var(--gold); }
+  .fillin ul.pts { margin: 0; }
+  .lit-item ul.pts { font-size: 0.97em; }
+
+  /* ---- literature themes ---- */
+  .theme {
+    display: grid; grid-template-columns: 13em 1fr; gap: 1.6em;
+    padding: 1.1em 0 0.4em; border-top: 1px solid var(--line);
+    opacity: 0;
+  }
+  .slide.enter .theme { animation: rise 0.6s ease forwards; }
+  /* div #1 is the kicker, so the three themes are divs 2–4 */
+  .slide.enter .theme:nth-of-type(2) { animation-delay: 0.2s; }
+  .slide.enter .theme:nth-of-type(3) { animation-delay: 0.45s; }
+  .slide.enter .theme:nth-of-type(4) { animation-delay: 0.7s; }
+  .theme-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2em; color: var(--gold); line-height: 1;
+  }
+  .theme-title { font-size: 1.05em; color: var(--ink); margin: 0.3em 0; }
+  .theme-line {
+    font-family: -apple-system, sans-serif; font-size: 0.78em;
+    color: var(--ink-dim); line-height: 1.45;
+  }
+  .theme .lit-item:last-child { margin-bottom: 0.6em; }
+  .gap {
+    margin-top: 1.2em; padding: 0.9em 1.2em;
+    border: 1px solid var(--gold); border-radius: 6px;
+    background: rgba(201,162,75,0.06);
+    opacity: 0;
+  }
+  .slide.enter .gap { animation: rise 0.6s 1s ease forwards; }
+  .gap-label {
+    font-family: -apple-system, sans-serif; font-size: 0.72em;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    margin-right: 0.8em;
+  }
+  @media (max-width: 800px) {
+    .theme { grid-template-columns: 1fr; gap: 0.6em; }
+  }
+
+  /* ---- causal diagram ---- */
+  .diagram { margin: 6px 0 22px; }
+  .diagram svg { width: 100%; max-width: 40em; height: auto; display: block; }
+  .node rect { fill: var(--bg-panel); stroke: var(--accent); stroke-width: 1.2; }
+  .node.dv rect { stroke: var(--gold); }
+  .node.conf rect { stroke: var(--todo); stroke-dasharray: 4 3; fill: none; }
+  .node .t1 { fill: var(--ink); font-family: Georgia, serif; font-size: 13px; text-anchor: middle; }
+  .node .t2 { fill: var(--ink-dim); font-family: -apple-system, sans-serif; font-size: 9.5px;
+              letter-spacing: 1px; text-transform: uppercase; text-anchor: middle; }
+  .node.conf .t2 { fill: var(--todo); }
+  .arrow { fill: none; stroke: var(--gold); stroke-width: 1.6;
+           stroke-dasharray: 100; stroke-dashoffset: 100; }
+  .slide.enter .arrow { animation: drawArrow 0.8s ease forwards; }
+  .slide.enter .arrow.a2 { animation-delay: 0.7s; }
+  @keyframes drawArrow { to { stroke-dashoffset: 0; } }
+  .conf-path { fill: none; stroke: var(--todo); stroke-width: 1.2; stroke-dasharray: 4 4; opacity: 0; }
+  .slide.enter .conf-path, .slide.enter .node.conf { animation: fadeConf 0.8s 1.5s ease forwards; }
+  .node.conf { opacity: 0; }
+  @keyframes fadeConf { to { opacity: 1; } }
+  .slide.enter .node { animation: tileIn 0.6s ease both; }
+  .slide.enter .node.conf { animation: fadeConf 0.8s 1.5s ease forwards; }
+
+  /* ---- content blocks ---- */
+  .question-box {
+    background: var(--bg-panel);
+    border-left: 4px solid var(--accent);
+    padding: 20px 24px;
+    font-style: italic;
+    font-size: 1.1em;
+    color: var(--ink);
+  }
+  .fillin {
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 18px 20px;
+    min-height: 70px;
+    margin: 16px 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1em;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .fillin:empty::before {
+    content: attr(data-placeholder);
+    font-family: -apple-system, sans-serif;
+    font-size: 0.82em;
+    font-style: italic;
+    color: var(--ink-dim);
+  }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .lit-item {
+    margin-bottom: 16px;
+    padding: 4px 0 4px 14px;
+    border-left: 2px solid var(--accent);
+    font-size: 0.94em;
+  }
+  a { color: var(--accent); }
+  .reflection-box { background: var(--bg-panel); border-radius: 6px; padding: 20px 24px; }
+
+  /* ---- header bar ---- */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 92px 0;
+    font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 0.8em;
+    color: var(--ink-dim); pointer-events: none;
+  }
+  .topbar b { color: var(--ink); font-weight: 600; }
+  .topbar .where { color: var(--gold); letter-spacing: 0.5px; transition: opacity 0.3s; }
+
+  /* ---- research question as the feature slide ---- */
+  .q-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.6em; align-items: center; }
+  .q-grid .question-box { font-size: 1.32em; line-height: 1.45; padding: 1.1em 1.3em; }
+  .q-grid .map-wrap { margin-top: 0; }
+  @media (max-width: 900px) { .q-grid { grid-template-columns: 1fr; } }
+
+  /* ---- reflection as two cards, with drifting mist ---- */
+  .ref-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; }
+  .ref-card {
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 1.1em 1.3em;
+  }
+  .ref-card h3 {
+    margin: 0 0 0.5em; font-weight: normal; font-size: 1.15em;
+    font-family: 'Cormorant Garamond', Georgia, serif; color: var(--gold);
+  }
+  .ref-card.unclear h3 { color: var(--ink-dim); }
+  .ref-card.unclear ul.pts li::before { background: var(--ink-dim); }
+  @media (max-width: 900px) { .ref-cards { grid-template-columns: 1fr; } }
+  #slide-reflection::before, #slide-reflection::after {
+    content: ''; position: absolute; left: -30%; right: -30%; height: 45%;
+    pointer-events: none; z-index: 0;
+    background: radial-gradient(50% 50% at 50% 50%, rgba(232,230,223,0.07), transparent 70%);
+    animation: mist 26s ease-in-out infinite alternate;
+  }
+  #slide-reflection::before { top: 8%; }
+  #slide-reflection::after  { bottom: 12%; animation-duration: 34s; animation-direction: alternate-reverse; }
+  @keyframes mist { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+
+  /* ---- references ---- */
+  .refs { list-style: none; padding: 0; margin: 0; font-size: 0.86em; line-height: 1.5; }
+  .refs li { padding-left: 2em; text-indent: -2em; margin-bottom: 0.75em; }
+  .refs a { color: var(--accent); word-break: break-all; }
+  .refs .tr { color: var(--ink-dim); }
+
+  /* ---- nav chrome ---- */
+  .nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    font-family: -apple-system, sans-serif;
+    z-index: 20;
+  }
+  .nav button {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 0.85em;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .nav button:hover { color: var(--ink); border-color: var(--accent); }
+  .nav button:active { transform: scale(0.94); }
+  .dots { display: flex; gap: 8px; }
+  .dot {
+    width: 7px; height: 7px;
+    background: var(--line);
+    cursor: pointer;
+    transform: rotate(45deg);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .dot.active { background: var(--gold); transform: rotate(45deg) scale(1.4); }
+  .counter {
+    font-size: 0.75em;
+    color: var(--ink-dim);
+    letter-spacing: 1px;
+    min-width: 40px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="snow"></canvas>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <clipPath id="shan-clip"><circle r="30"/></clipPath>
+    <symbol id="shanyrak" viewBox="-62 -62 124 124">
+      <g stroke="#c9a24b" fill="none" stroke-linecap="round">
+        <g id="uyk" stroke-width="2.2"></g>
+        <circle r="36" stroke-width="5"/>
+        <circle r="30" stroke-width="1.6"/>
+        <g clip-path="url(#shan-clip)" stroke-width="3">
+          <path d="M-34 -13 Q0 -21 34 -13"/>
+          <path d="M-34 0 Q0 -8 34 0"/>
+          <path d="M-34 13 Q0 5 34 13"/>
+          <path d="M-13 -34 Q-21 0 -13 34"/>
+          <path d="M0 -34 Q-8 0 0 34"/>
+          <path d="M13 -34 Q5 0 13 34"/>
+        </g>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="sun show" id="sun" aria-hidden="true">
+  <svg viewBox="-100 -100 200 200">
+    <g id="rays" fill="#c9a24b"></g>
+    <circle r="34" fill="#c9a24b"/>
+  </svg>
+</div>
+
+<svg class="corner tl" viewBox="0 0 54 54" aria-hidden="true">
+  <path d="M4 50 V4 H50 M4 4 C18 4 22 12 18 18 C15 23 9 20 11 15 M4 4 C4 18 12 22 18 18"
+        fill="none" stroke="#c9a24b" stroke-width="1.4" stroke-linecap="round"/>
+</svg>
+<svg class="corner tr" viewBox="0 0 54 54" aria-hidden="true">
+  <path d="M4 50 V4 H50 M4 4 C18 4 22 12 18 18 C15 23 9 20 11 15 M4 4 C4 18 12 22 18 18"
+        fill="none" stroke="#c9a24b" stroke-width="1.4" stroke-linecap="round"/>
+</svg>
+
+<svg id="mountains" viewBox="0 0 1200 200" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="mfade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2a40" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#0a1119" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 150 L70 118 L120 132 L190 84 L240 104 L300 60 L350 92 L410 70 L470 108
+           L540 52 L600 88 L650 74 L720 110 L790 66 L850 96 L910 58 L980 100 L1040 82
+           L1110 116 L1200 96 L1200 200 L0 200 Z" fill="url(#mfade)"/>
+  <path d="M0 175 L90 160 L170 170 L260 150 L360 166 L460 148 L560 164 L660 150
+           L760 168 L860 152 L960 166 L1060 156 L1200 168 L1200 200 L0 200 Z"
+        fill="#0a1119"/>
+</svg>
+
+<div class="topbar"><span><b>Brodie</b> · PLS 210</span><span class="where" id="where">Qantar</span></div>
+
+<div class="deck">
+
+  <section class="slide active enter" id="slide-title" data-name="Qantar">
+    <div class="slide-inner">
+      <h1>Regional Variation in Institutional Trust After the January 2022 Unrest</h1>
+      <p class="meta">Brodie — PLS210 Research Proposal</p>
+      <div class="dateline">
+        <span class="pulse-dot"></span>
+        <span class="rule"></span>
+        <span>Qantar · 2–11 January 2022</span>
+      </div>
+      <div class="native">Қаңтар оқиғалары</div>
+      <svg class="ornament" aria-hidden="true">
+        <defs>
+          <pattern id="horn" width="44" height="22" patternUnits="userSpaceOnUse">
+            <path d="M22 20 C22 10 14 6 9 8 C5 10 6 16 10 15 C13 14 12 11 10 11
+                     M22 20 C22 10 30 6 35 8 C39 10 38 16 34 15 C31 14 32 11 34 11"
+                  fill="none" stroke="#c9a24b" stroke-width="1.3" stroke-linecap="round"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="22" fill="url(#horn)"/>
+      </svg>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-context" data-name="What happened">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">Context</div>
+      <h2>Qantar: What Happened</h2>
+      <div class="tl">
+        <div class="tl-item">
+          <div class="tl-date">2 January 2022</div>
+          <div class="tl-text">Protests against a sharp rise in autogas prices begin in western Kazakhstan.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-date">Early January</div>
+          <div class="tl-text">Unrest spreads; the government temporarily loses control of Almaty and several provinces. Almaty's city administration building and the presidential residence are burned.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-date">From 6 January</div>
+          <div class="tl-text">About 2,500 CSTO troops, mostly Russian, arrive at the government's request.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-date">11 January 2022</div>
+          <div class="tl-text">Order restored. Mass arrests follow.</div>
+        </div>
+      </div>
+      <div class="memorial">
+        <div>
+          <div class="dotfield" id="dotfield" aria-label="238 dots, one for each person killed"></div>
+          <div class="memorial-caption">One mark for each of the 238 people killed.</div>
+        </div>
+        <div class="stats" style="flex-direction:column; gap:14px; margin:0;">
+          <div><div class="stat-num">238</div><div class="stat-label">people killed</div></div>
+          <div><div class="stat-num">10,000+</div><div class="stat-label">detained in January 2022 alone</div></div>
+        </div>
+      </div>
+      <div class="source-note">Sources: Sadykova (2024); Bertelsmann Stiftung, BTI 2026; Human Rights Watch, World Report 2026.</div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-question" data-name="Research question">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">01</div>
+      <h2>Research Question</h2>
+      <div class="q-grid">
+        <div>
+      <div class="question-box">
+        Do people living in Almaty and the other regions most affected by the January 2022
+        unrest show a larger decline in institutional trust in government — from before
+        January 2022 to now — than people living in less-affected regions?
+      </div>
+        </div>
+      <div class="map-wrap">
+        <svg viewBox="0 0 490 330" role="img" aria-label="Schematic tile map of Kazakhstan's regions, with Almaty city, Mangystau, Turkestan and Akmola highlighted">
+          <!-- col*70, row*66 ; tile 64x60 -->
+          <g class="tile"><rect x="0"   y="0"   width="64" height="60" rx="3"/><text x="32"  y="34">W. Kazakhstan</text></g>
+          <g class="tile"><rect x="140" y="0"   width="64" height="60" rx="3"/><text x="172" y="34">Kostanay</text></g>
+          <g class="tile"><rect x="210" y="0"   width="64" height="60" rx="3"/><text x="242" y="34">N. Kazakhstan</text></g>
+          <g class="tile"><rect x="280" y="0"   width="64" height="60" rx="3"/><text x="312" y="34">Pavlodar</text></g>
+
+          <g class="tile"><rect x="0"   y="66"  width="64" height="60" rx="3"/><text x="32"  y="100">Atyrau</text></g>
+          <g class="tile"><rect x="70"  y="66"  width="64" height="60" rx="3"/><text x="102" y="100">Aktobe</text></g>
+          <g class="tile hit"><rect x="210" y="66"  width="64" height="60" rx="3"/><text x="242" y="100">Akmola</text></g>
+          <g class="tile"><rect x="280" y="66"  width="64" height="60" rx="3"/><text x="312" y="100">Astana</text></g>
+          <g class="tile"><rect x="350" y="66"  width="64" height="60" rx="3"/><text x="382" y="100">Abai</text></g>
+          <g class="tile"><rect x="420" y="66"  width="64" height="60" rx="3"/><text x="452" y="100">E. Kazakhstan</text></g>
+
+          <g class="tile hit"><rect x="0"   y="132" width="64" height="60" rx="3"/><text x="32"  y="166">Mangystau</text></g>
+          <g class="tile"><rect x="140" y="132" width="64" height="60" rx="3"/><text x="172" y="166">Ulytau</text></g>
+          <g class="tile"><rect x="210" y="132" width="64" height="60" rx="3"/><text x="242" y="166">Karaganda</text></g>
+          <g class="tile"><rect x="350" y="132" width="64" height="60" rx="3"/><text x="382" y="166">Jetisu</text></g>
+
+          <g class="tile"><rect x="140" y="198" width="64" height="60" rx="3"/><text x="172" y="232">Kyzylorda</text></g>
+          <g class="tile hit"><rect x="210" y="198" width="64" height="60" rx="3"/><text x="242" y="232">Turkestan</text></g>
+          <g class="tile"><rect x="280" y="198" width="64" height="60" rx="3"/><text x="312" y="232">Zhambyl</text></g>
+          <g class="tile"><rect x="350" y="198" width="64" height="60" rx="3"/><text x="382" y="232">Almaty reg.</text></g>
+
+          <g class="tile"><rect x="210" y="264" width="64" height="60" rx="3"/><text x="242" y="298">Shymkent</text></g>
+          <g class="tile hit"><rect x="350" y="264" width="64" height="60" rx="3"/><text x="382" y="298">Almaty city</text></g>
+        </svg>
+        <div class="map-legend">
+          <span><span class="swatch hit"></span>Hardest-hit (comparison group)</span>
+          <span><span class="swatch"></span>Less-affected</span>
+          <span>Schematic, not to scale</span>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-why" data-name="Why it matters">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">02</div>
+      <h2>Why This Is Worth Asking</h2>
+      <div class="fillin" data-placeholder="Why this question matters — to Kazakhstan, to research on trust, or to you..."><ul class="pts"><li>The January events may not have affected every region the same way</li><li>If trust fell more in some regions, the population could become divided</li><li>Some regions might keep supporting the government while others turn away</li><li>This shows whether Qantar left a lasting regional divide</li></ul></div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-positioning" data-name="Positioning">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">03</div>
+      <h2>Epistemological Positioning</h2>
+      <p style="font-size:1.2em;"><strong>Positivist.</strong></p>
+      <div class="fillin" data-placeholder="Your justification here..."><ul class="pts"><li>Uses survey data to measure trust as percentages</li><li>Compares those percentages between groups of regions</li><li>Compares trust before January 2022 with trust now</li></ul></div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-contribution" data-name="Contribution">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">04</div>
+      <h2>Contribution</h2>
+      <p style="font-style:italic; color:var(--ink-dim); margin-bottom:16px;">What does this study add to existing research?</p>
+      <div class="ref-cards">
+        <div class="ref-card unclear"><h3>What existing research shows</h3><ul class="pts"><li>Trust in government is low, and it is measured for the country as a whole (Sadykova; OECD)</li><li>Large surveys cover every region but only publish national totals (KazISS; Bureau of National Statistics)</li><li>The unrest hit some regions harder than others (BTI)</li></ul></div>
+        <div class="ref-card"><h3>What this study adds</h3><ul class="pts"><li>Trust broken down <em>by region</em>, before and after January 2022</li><li>A test of whether the January events affected trust differently from region to region</li><li>A useful answer either way: a bigger drop in hard-hit regions supports the mechanism; an equal drop points to a nationwide cause</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-litreview" data-name="Literature review">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">05</div>
+      <h2>Literature Review</h2>
+
+      <div class="theme">
+        <div class="theme-label">
+          <div class="theme-num">I</div>
+          <div class="theme-title">Trust in government in Kazakhstan</div>
+          <div class="theme-line">Low trust is a recognised problem, but it is only measured for the country as a whole.</div>
+        </div>
+        <div>
+      <div class="lit-item">
+        <strong>Sadykova, K. (2024). "Public Trust in Government in Kazakhstan's Framework
+        of Good Governance." Мемлекеттік басқару және мемлекеттік қызмет, №2 (89).</strong><ul class="pts"><li>Looks at low trust through a "good governance" lens</li><li>Trust in law enforcement rose from 2022 to 2023 but stayed low</li><li>In 2022 only 52.5% felt able to influence government actions</li><li>No regional breakdown</li></ul></div>
+      <div class="lit-item">
+        <strong>OECD (2025). <em>OECD Public Governance Scan of Kazakhstan.</em> OECD
+        Publishing.</strong><ul class="pts"><li>Confirms an official government-trust survey has run since 2022</li><li>Compares Kazakhstan with 30 OECD countries</li><li>No regional breakdown</li></ul></div>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="theme-label">
+          <div class="theme-num">II</div>
+          <div class="theme-title">Where the trust numbers come from</div>
+          <div class="theme-line">Large surveys cover every region, but only publish national totals.</div>
+        </div>
+        <div>
+      <div class="lit-item">
+        <strong>Kazakhstan Institute for Strategic Studies (KazISS / KISI) — national
+        trust surveys, kisi.kz, 2026.</strong><ul class="pts"><li>Recurring survey of ~8,000 people across all 17 regions and 3 cities</li><li>76.4% trust in the President in its 2025 survey</li><li>Publishes national totals only, so it is the best candidate for a data request</li></ul></div>
+      <div class="lit-item">
+        <strong>Bureau of National Statistics, Agency for Strategic Planning and Reforms.
+        "The level of public confidence in law enforcement agencies and the judiciary."
+        Oct–Nov 2023.</strong><ul class="pts"><li>18,005 households in all regions</li><li>Crime data is published by region (Almaty highest), but trust only nationally</li></ul></div>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="theme-label">
+          <div class="theme-num">III</div>
+          <div class="theme-title">The January events</div>
+          <div class="theme-line">Why the unrest, and the crackdown, hit some regions harder than others.</div>
+        </div>
+        <div>
+      <div class="lit-item">
+        <strong>Bertelsmann Stiftung (2026). <em>BTI 2026 Country Report — Kazakhstan.</em></strong><ul class="pts"><li>Independent governance index; dates the unrest to 2–11 January 2022</li><li>Links it to the "socially unstable western regions", the basis for my region list</li><li>10,000+ people detained in January 2022 alone</li><li>No trust data: supports the mechanism and region choice</li></ul></div>
+        </div>
+      </div>
+
+      <div class="gap">
+        <span class="gap-label">The gap</span>
+        Trust is measured, and the unrest was regional, but no one reports trust <em>by region</em>. That is what this study adds.
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-theory" data-name="Theory & hypothesis">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">06</div>
+      <h2>Theory and Hypotheses</h2>
+      <div class="diagram">
+        <svg viewBox="0 0 640 230" role="img" aria-label="Causal diagram: region of residence leads to witnessing the crackdown, which leads to lower institutional trust; other regional differences may also affect trust">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#c9a24b"/>
+            </marker>
+            <marker id="ahc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#d68a3f"/>
+            </marker>
+          </defs>
+
+          <g class="node"><rect x="0" y="60" width="160" height="66" rx="5"/>
+            <text class="t2" x="80" y="84">IV · proxy</text>
+            <text class="t1" x="80" y="106">Region of residence</text></g>
+
+          <g class="node"><rect x="240" y="60" width="160" height="66" rx="5"/>
+            <text class="t2" x="320" y="84">Mechanism</text>
+            <text class="t1" x="320" y="106">Witnessing the crackdown</text></g>
+
+          <g class="node dv"><rect x="480" y="60" width="160" height="66" rx="5"/>
+            <text class="t2" x="560" y="84">DV</text>
+            <text class="t1" x="560" y="106">Trust in government ↓</text></g>
+
+          <path class="arrow"    d="M162 93 L236 93" marker-end="url(#ah)" pathLength="100"/>
+          <path class="arrow a2" d="M402 93 L476 93" marker-end="url(#ah)" pathLength="100"/>
+
+          <g class="node conf"><rect x="240" y="168" width="160" height="56" rx="5"/>
+            <text class="t2" x="320" y="188">Alternative path?</text>
+            <text class="t1" x="320" y="210" style="font-size:11.5px">Economy · cities · media</text></g>
+          <path class="conf-path" d="M80 128 L80 196 L236 196" marker-end="url(#ahc)"/>
+          <path class="conf-path" d="M402 196 L560 196 L560 130" marker-end="url(#ahc)"/>
+
+          <text x="0" y="24" style="fill:#a9a89f; font-family:-apple-system,sans-serif; font-size:10px; letter-spacing:1px">HYPOTHESISED PATH</text>
+          <text x="412" y="216" style="fill:#d68a3f; font-family:-apple-system,sans-serif; font-size:9.5px; letter-spacing:1px">ECOLOGICAL INFERENCE RISK</text>
+        </svg>
+      </div>
+      <ul class="pts"><li><strong>Independent variable:</strong> Region of residence, as a proxy for exposure<ul class="pts"><li>Hard-hit: Almaty city, Mangystau, Turkestan, Akmola</li><li>Chosen using BTI (2026)</li></ul></li><li><strong>Dependent variable:</strong> Institutional trust in government (broadly)</li><li><strong>Hypothesis:</strong> Hard-hit regions show a larger drop in trust from before January 2022 to now</li><li><strong>Causal mechanism:</strong><ul class="pts"><li>People nearer the unrest saw or felt the crackdown (arrests, force, 238 deaths)</li><li>Seeing the state use force against civilians lowers trust in the state</li></ul></li></ul>
+      <div class="fillin" data-placeholder="How you'd address the ecological inference limitation..."><strong>Limitation</strong><ul class="pts"><li>Almaty could show a bigger drop in trust for a reason unrelated to the crackdown</li><li>It is more urbanised than most of the country</li><li>People there see and consume much more news and information</li><li>That alone could lower trust</li></ul></div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-ai" data-name="AI statement">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">07</div>
+      <h2>AI Transparency Statement</h2>
+      <div class="ref-cards">
+        <div class="ref-card"><h3>What I did</h3><ul class="pts"><li>Chose the topic and the research question</li><li>Found the OECD, Sadykova and BTI sources, and pointed to KazISS</li><li>Chose positivism, the variables and the causal mechanism (from options Claude raised)</li><li>Wrote the hypothesis myself</li><li>Wrote first drafts of the text sections and came up with the limitation</li><li>Decided the look and structure of the page</li></ul></div>
+        <div class="ref-card unclear"><h3>What Claude did</h3><ul class="pts"><li>Questioned my research question and mechanism until they were specific</li><li>Found the KazISS and Bureau of Statistics pages, and summarised all five sources</li><li>Edited my English, and wrote up my reflection from points I chose</li><li>Designed and coded the page: map, diagram and animations</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-reflection" data-name="Reflection · ungraded">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">Ungraded</div>
+      <h2>What working with AI helped me understand — and what I still don't understand</h2>
+      <div class="ref-cards">
+        <div class="ref-card"><h3>What I understand now</h3><ul class="pts"><li>I need to be more specific to find my own path of research</li><li>Positivist research turns trust into numbers and compares them; at first I thought the opposite</li><li>My question is about trust going <em>down over time</em>, not just being lower in Almaty</li></ul></div>
+        <div class="ref-card unclear"><h3>What I still don't understand</h3><ul class="pts"><li>How to carry out my research step by step, from getting the data to comparing regions</li><li>How to rule out other explanations, like Almaty being a big city where people see more news</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-refs" data-name="References">
+    <div class="slide-inner">
+      <svg class="shanyrak" aria-hidden="true"><use href="#shanyrak"/></svg>
+      <div class="kicker">Sources</div>
+      <h2>References</h2>
+      <ul class="refs">
+        <li>Bertelsmann Stiftung. (2026). <em>BTI 2026 country report: Kazakhstan.</em> Bertelsmann Stiftung. <a href="https://bti-project.org/en/reports/country-report/KAZ">https://bti-project.org/en/reports/country-report/KAZ</a></li>
+        <li>Bureau of National Statistics of the Agency for Strategic Planning and Reforms of the Republic of Kazakhstan. (2023). <em>The level of public confidence in law enforcement agencies and the judiciary</em> [Survey, October–November 2023]. <a href="https://stat.gov.kz/en/industries/social-statistics/stat-crime/publications/113960/">https://stat.gov.kz/en/industries/social-statistics/stat-crime/publications/113960/</a></li>
+        <li>Human Rights Watch. (2026). <em>World report 2026: Kazakhstan.</em> <a href="https://www.hrw.org/world-report/2026/country-chapters/kazakhstan">https://www.hrw.org/world-report/2026/country-chapters/kazakhstan</a></li>
+        <li>Kazakhstan Institute for Strategic Studies. (2025). <em>73% казахстанцев считают, что страна развивается в правильном направлении – соцопрос</em> <span class="tr">[73% of Kazakhstanis believe the country is developing in the right direction: survey]</span>. <a href="https://kisi.kz/ru/73-kazahstanchev-schitajut-chto-strana-razvivaetsya-v-pravilnom-napravlenii-sochopros/">https://kisi.kz/ru/73-kazahstanchev-schitajut-chto-strana-razvivaetsya-v-pravilnom-napravlenii-sochopros/</a></li>
+        <li>Kazakhstan Institute for Strategic Studies. (2026, June 17). <em>«Слышащее государство» как главный фактор поддержки государственного курса</em> <span class="tr">[The "listening state" as the main factor of support for the state's course]</span>. <a href="https://kisi.kz/ru/slyshashhee-gosudarstvo-kak-glavnyj-faktor-podderzhki-gosudarstvennogo-kursa/">https://kisi.kz/ru/slyshashhee-gosudarstvo-kak-glavnyj-faktor-podderzhki-gosudarstvennogo-kursa/</a></li>
+        <li>OECD. (2025). <em>OECD public governance scan of Kazakhstan: Toward a more agile, responsive and effective public administration.</em> OECD Publishing. <a href="https://doi.org/10.1787/f8298798-en">https://doi.org/10.1787/f8298798-en</a></li>
+        <li>Sadykova, K. (2024). Public trust in government in Kazakhstan's framework of good governance. <em>Memlekettik basqaru zhane memlekettik qyzmet, 2</em>(89), 25–32. <a href="https://doi.org/10.52123/1994-2370-2024-1184">https://doi.org/10.52123/1994-2370-2024-1184</a></li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button id="prevBtn">← Prev</button>
+  <div class="dots"></div>
+  <span class="counter"></span>
+  <button id="nextBtn">Next →</button>
+</div>
+
+<script>
+  /* ---- gentle snowfall, evoking January without depicting anything ---- */
+  const canvas = document.getElementById('snow');
+  const ctx = canvas.getContext('2d');
+  let W, H, flakes;
+  let gust = 0;
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  function initFlakes() {
+    flakes = Array.from({ length: 70 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.6 + 0.4,
+      speed: Math.random() * 0.4 + 0.15,
+      drift: Math.random() * 0.4 - 0.2,
+      alpha: Math.random() * 0.35 + 0.1
+    }));
+  }
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#e8e6df';
+    for (const f of flakes) {
+      ctx.globalAlpha = f.alpha;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fill();
+      f.y += f.speed * (1 + gust * 3);
+      f.x += f.drift + gust * 2.2;
+      if (f.x > W) f.x = 0;
+      if (f.y > H) { f.y = -4; f.x = Math.random() * W; }
+    }
+    ctx.globalAlpha = 1;
+    gust *= 0.96;
+    requestAnimationFrame(tick);
+  }
+  resize(); initFlakes(); tick();
+  window.addEventListener('resize', () => { resize(); initFlakes(); });
+
+  /* ---- shanyrak roof poles (uyk) ---- */
+  const uyk = document.getElementById('uyk');
+  for (let k = 0; k < 36; k++) {
+    const a = k * Math.PI * 2 / 36;
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    l.setAttribute('x1', (Math.cos(a) * 39).toFixed(2)); l.setAttribute('y1', (Math.sin(a) * 39).toFixed(2));
+    l.setAttribute('x2', (Math.cos(a) * 60).toFixed(2)); l.setAttribute('y2', (Math.sin(a) * 60).toFixed(2));
+    uyk.appendChild(l);
+  }
+
+  /* ---- 32 sun rays, as on the flag ---- */
+  const rays = document.getElementById('rays');
+  for (let k = 0; k < 32; k++) {
+    const r = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    r.setAttribute('points', '-4,-42 4,-42 0,-92');
+    r.setAttribute('transform', 'rotate(' + (k * 360 / 32) + ')');
+    rays.appendChild(r);
+  }
+  const sun = document.getElementById('sun');
+
+  /* ---- 238 memorial marks, lit one after another ---- */
+  const field = document.getElementById('dotfield');
+  for (let k = 0; k < 238; k++) {
+    const s = document.createElement('span');
+    s.style.animationDelay = (0.4 + k * 0.012) + 's';
+    field.appendChild(s);
+  }
+
+  /* ---- map tiles sweep in from west to east ---- */
+  document.querySelectorAll('.map-wrap .tile').forEach(t => {
+    const x = parseFloat(t.querySelector('rect').getAttribute('x'));
+    const y = parseFloat(t.querySelector('rect').getAttribute('y'));
+    t.style.animationDelay = (0.3 + x / 420 + y / 2000) + 's';
+  });
+
+  /* ---- title words fade in one by one ---- */
+  const h1 = document.querySelector('#slide-title h1');
+  h1.innerHTML = h1.textContent.trim().split(/\s+/)
+    .map((w, k) => '<span class="w" style="animation-delay:' + (0.15 + k * 0.09) + 's">' + w + '</span>')
+    .join(' ');
+
+  /* ---- a gust of snow on each slide change ---- */
+  function blow() { gust = 1; }
+
+  /* ---- slide navigation ---- */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.querySelector('.counter');
+  let i = 0;
+
+  const where = document.getElementById('where');
+  const dotsWrap = document.querySelector('.dots');
+  slides.forEach((_, idx) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (idx === 0 ? ' active' : '');
+    d.title = slides[idx].dataset.name;
+    d.addEventListener('click', () => go(idx));
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(document.querySelectorAll('.dot'));
+
+  function go(n) {
+    if (n < 0 || n >= slides.length || n === i) return;
+    slides[i].classList.remove('active', 'enter');
+    dots[i].classList.remove('active');
+    i = n;
+    const s = slides[i];
+    s.classList.add('active');
+    dots[i].classList.add('active');
+    where.textContent = s.dataset.name;
+    // restart entrance animation
+    s.classList.remove('enter');
+    void s.offsetWidth;
+    s.classList.add('enter');
+    counter.textContent = (i + 1) + ' / ' + slides.length;
+    // sun only on the title slide, so it never sits behind dense text
+    sun.classList.toggle('show', i === 0);
+    blow();
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => go(i - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => go(i + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') go(i + 1);
+    if (e.key === 'ArrowLeft') go(i - 1);
+  });
+
+  counter.textContent = '1 / ' + slides.length;
+</script>
+
+</body>
+</html>
